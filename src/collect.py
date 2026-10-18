@@ -20,7 +20,6 @@ Run:
 import argparse
 import csv
 import gzip
-import json
 import logging
 import time
 import uuid
@@ -71,11 +70,13 @@ def fetch(session: requests.Session, url: str) -> tuple[dict, bytes]:
             return response.json(), response.content
         except (requests.RequestException, ValueError) as exc:
             last_error = exc
-            wait = 2 ** attempt  # 2s, 4s, 8s: exponential backoff
+            if attempt == MAX_RETRIES:
+                break  # last try failed, so stop instead of waiting again
+            wait = 2 ** attempt  # 2s, then 4s: exponential backoff
             log.warning("Fetch failed (attempt %s/%s) for %s: %s. Retrying in %ss",
                         attempt, MAX_RETRIES, url, exc, wait)
             time.sleep(wait)
-    raise RuntimeError(f"Giving up on {url}: {last_error}")
+    raise RuntimeError(f"Giving up on {url} after {MAX_RETRIES} attempts: {last_error}")
 
 
 def discover_feeds(session: requests.Session) -> dict[str, str]:
