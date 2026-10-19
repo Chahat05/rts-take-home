@@ -13,6 +13,8 @@ FACTS = [
      "min_open_docks": 6, "tightest_dock_hour": "3 PM"},
     {"hub": "L'Enfant Plaza", "min_bikes": 28, "pct_time_with_ebike": 95.1,
      "min_open_docks": 62, "tightest_dock_hour": "4 PM"},
+    {"hub": "Rosslyn", "min_bikes": 27, "pct_time_with_ebike": 100.0,
+     "min_open_docks": 50, "tightest_dock_hour": "4 PM"},
 ]
 
 
@@ -28,3 +30,4 @@ def test_template_mentions_the_tight_spots():
     assert "**Union Station**" in text and "dropped to 6" in text and "3 PM" in text
     assert "**L'Enfant Plaza**" in text and "95.1%" in text
     assert "dropped to 62" not in text        # plenty of docks -> no warning
+    assert "**Rosslyn**: plenty of bikes and docks the whole time" in text   # nothing to flag

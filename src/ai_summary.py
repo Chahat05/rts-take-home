@@ -73,13 +73,18 @@ def template_summary(facts):
     """Simple rules, no AI. Used when there's no API key or the call fails."""
     lines = []
     for f in facts:
-        line = f"- **{f['hub']}**: always had bikes nearby (never fewer than {f['min_bikes']})"
+        problems = []
         if f["pct_time_with_ebike"] < 100:
-            line += f"; but e-bikes sometimes ran out (available {f['pct_time_with_ebike']}% of the time)"
+            problems.append(f"E-bikes sometimes ran out (available {f['pct_time_with_ebike']}% of the time).")
         if f["min_open_docks"] < 10:
-            line += (f"; returning a bike is the tight spot: open docks dropped to {f['min_open_docks']},"
-                     f" and are lowest around {f['tightest_dock_hour']}")
-        lines.append(line + ".")
+            problems.append(f"Returning a bike is the tight spot: open docks dropped to {f['min_open_docks']},"
+                            f" lowest around {f['tightest_dock_hour']}.")
+
+        if problems:
+            line = f"- **{f['hub']}**: always had bikes nearby (never fewer than {f['min_bikes']}). " + " ".join(problems)
+        else:
+            line = f"- **{f['hub']}**: plenty of bikes and docks the whole time (never fewer than {f['min_bikes']} bikes)."
+        lines.append(line)
     return "\n".join(lines)
 
 

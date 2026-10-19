@@ -42,7 +42,7 @@ The SQL is mostly standard, so it would move to Snowflake with small changes (Sn
 
 - **Where it sits:** at the very end, on top of gold, where the results get shown.
 - **What it reads:** only the small answer views (per hub, per hour). Never the raw data.
-- **What it produces:** a short plain-English tip per hub for a traveller, saved to [`docs/ai_summary.md`](ai_summary.md). For example: *"Union Station: always had bikes nearby; returning a bike is the tight spot, lowest around 3 PM."*
+- **What it produces:** a short plain-English tip per hub for a traveller, saved to [`docs/ai_summary.md`](ai_summary.md). For example: *"Union Station: always had bikes nearby (never fewer than 46). Returning a bike is the tight spot: open docks dropped to 6, lowest around 12 PM."*
 
 **Why there:** the AI only explains numbers the pipeline already calculated and checked. It never does the maths, so it can't make up figures, and it only reads a few hundred numbers, so it's cheap. If there's no API key or the call fails, a simple template writes the summary instead, so the pipeline never breaks because of the AI step.
 
