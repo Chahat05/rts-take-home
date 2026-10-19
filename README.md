@@ -55,7 +55,3 @@ pytest -q
 ```
 
 Raw data, logs and the warehouse file are not in the repo (see `.gitignore`). Running steps 1–3 recreates them.
-
-## Use of AI
-
-I used AI (Claude) as a coding assistant to help write and review code, SQL and docs, as RTS allowed. The design, the choices and trade-offs, and the analysis are mine, and I can walk through any part of it.
