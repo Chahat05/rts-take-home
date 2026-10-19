@@ -2,7 +2,7 @@
 
 XYZ wants to know if bikes can help their customers with the last mile, like getting from the train station or airport to their hotel. So I built the pipeline around one question: **when a traveller arrives at a DC travel hub, can they find a bike nearby?**
 
-All numbers below are from my own live collection, about 30 hours (Fri Oct 16, 2 PM to Sat Oct 17, 8 PM DC time), one snapshot every ~2 minutes. The collector is still running, so these will firm up with more data.
+All numbers below are from my own live collection: about 3 days (Fri Oct 16, 2 PM to Mon Oct 19, 7 PM DC time), 2,307 snapshots, one every ~2 minutes. The collector is still running, so these will firm up with more data.
 
 ---
 
@@ -42,7 +42,7 @@ The SQL is mostly standard, so it would move to Snowflake with small changes (Sn
 
 - **Where it sits:** at the very end, on top of gold, where the results get shown.
 - **What it reads:** only the small answer views (per hub, per hour). Never the raw data.
-- **What it produces:** a short plain-English tip per hub for a traveller, saved to [`docs/ai_summary.md`](ai_summary.md). For example: *"Union Station: always had bikes nearby (never fewer than 46). Returning a bike is the tight spot: open docks dropped to 6, lowest around 12 PM."*
+- **What it produces:** a short plain-English tip per hub for a traveller, saved to [`docs/ai_summary.md`](ai_summary.md). For example: *"Union Station: always had bikes nearby (never fewer than 28). Returning a bike is the tight spot: open docks dropped to 6, and on average fewest around 12 PM."*
 
 **Why there:** the AI only explains numbers the pipeline already calculated and checked. It never does the maths, so it can't make up figures, and it only reads a few hundred numbers, so it's cheap. If there's no API key or the call fails, a simple template writes the summary instead, so the pipeline never breaks because of the AI step.
 
@@ -83,9 +83,9 @@ I picked it because it's exactly XYZ's last-mile use case, and it turns the raw 
 
 **What the data shows so far:**
 
-- **Finding a bike is never the problem.** Every hub had bikes within 400 m the whole time. The lowest count at any moment was 17 (Crystal City).
-- **Returning a bike is the tight spot, at Union Station and the airport.** At Union Station, open docks fall from about 38 at night to about 12–14 between 10 AM and 4 PM (people ride in and park), and hit 6 at the worst moment. Reagan Airport always has few open docks (about 9–13, lowest 7), because its stations are small.
-- **E-bikes can run out.** L'Enfant Plaza had **zero e-bikes for about 1.5 hours** late Friday night (11:18 PM to 12:43 AM). Every other hub always had at least one.
+- **Finding a bike is never the problem.** Every hub had bikes within 400 m the whole time. The lowest count at any moment was 5 (Reagan Airport), and most hubs never dropped below 12.
+- **Returning a bike is the tight spot, at Union Station and the airport.** At Union Station, open docks fall from about 38–40 at night to about 19 around midday (people ride in and park), and hit 6 at the worst moment. Reagan Airport always has few open docks (about 12–16 on average), because its stations are small, and it dropped to just 2 early on Monday morning (around 6 AM).
+- **E-bikes can run out.** L'Enfant Plaza had **zero e-bikes for about 1.5 hours** late Friday night (11:18 PM to 12:43 AM). Foggy Bottom ran out a few times on Saturday night and Sunday, and Reagan Airport for about 10 minutes early Monday morning. The other hubs always had at least one.
 
 So for XYZ: bikes are a reliable last-mile option from these hubs, but a traveller ending a ride at Union Station in the middle of the day, or at the airport, may have to look for a dock.
 
@@ -101,7 +101,7 @@ Two sources (details in the table above):
 **Other sources I considered:**
 - **Flight arrivals at Reagan:** very on-theme, but it needs a paid or keyed API.
 - **WMATA Metro ridership:** monthly, so it can't be matched to 2-minute snapshots.
-- **Events:** too few in 30 hours to compare.
+- **Events:** too few in 3 days to compare.
 - **Capital Bikeshare's monthly trip history:** it records rides, not how many bikes are available.
 
 These are good next steps, along with replacing my 10 hand-picked hubs with every Metro station from Open Data DC.
@@ -119,10 +119,10 @@ These are good next steps, along with replacing my 10 hand-picked hubs with ever
 | **The two feeds have different timestamps** | ASOF join with a 10-minute limit (see Q5). On the real data, every snapshot matched. |
 | **Impossible values** | Checks for missing coordinates, negative counts (these stop the build), and bikes outside the DC area. Real findings, kept but flagged: **about 2% of e-bikes report more battery range than the published maximum**, and some stations report more bikes than docks (e-bikes can lock at a full station). |
 | **New or changed reference data** (new station, new bike type) | Checks for station IDs or vehicle types we don't know about, and for any dockless bike that isn't an e-bike (gold assumes they all are). |
-| **Stale station data** | A check for stations that say they're open but haven't reported in over an hour. |
+| **Stale station data** | A check for stations that say they're open but haven't reported in over an hour. It caught 1 case so far. |
 | **Daylight saving** | Everything is stored in UTC, and converted using the zone name `America/New_York`, not a fixed −4. Clocks change on Nov 1, and a fixed offset would quietly shift every hour-of-day result by one. |
 | **The feed format changes** | URLs are read from `gbfs.json` (discovery) instead of being hard-coded. If the system moves to GBFS 3.0, `free_bike_status` becomes `vehicle_status`, and that would need a small change in silver. |
 | **Station closures** | The `system_alerts` feed lists closures and disruptions. I don't use it yet. It would be the next feed to add, so the analysis can explain sudden drops. |
-| **Small sample** | About 30 hours covers one weekday afternoon and one Saturday. I say this openly, and the collector keeps running to build more history. |
+| **Small sample** | About 3 days covers Friday afternoon, a weekend and one Monday, with only 5 wet hours. I say this openly, and the collector keeps running to build more history. |
 
 **ERROR vs WARN:** checks that would make the answer wrong (duplicates, missing locations, negative counts) **stop the build**. Everything else is a WARN: recorded and shown, but the data is still used.

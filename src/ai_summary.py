@@ -78,7 +78,7 @@ def template_summary(facts):
             problems.append(f"E-bikes sometimes ran out (available {f['pct_time_with_ebike']}% of the time).")
         if f["min_open_docks"] < 10:
             problems.append(f"Returning a bike is the tight spot: open docks dropped to {f['min_open_docks']},"
-                            f" lowest around {f['tightest_dock_hour']}.")
+                            f" and on average fewest around {f['tightest_dock_hour']}.")
 
         if problems:
             line = f"- **{f['hub']}**: always had bikes nearby (never fewer than {f['min_bikes']}). " + " ".join(problems)
@@ -119,15 +119,15 @@ def main():
 
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     text = None
-    written_by = "simple template (no API key set)"
+    written_by = "Template version (no AI key set)"
 
     if api_key:
         try:
             text = ai_summary(facts, api_key)
-            written_by = f"LLM ({MODEL})"
+            written_by = f"Written by Claude ({MODEL})"
         except Exception as error:
             print(f"AI call failed ({error}). Using the template instead.")
-            written_by = "simple template (AI call failed)"
+            written_by = "Template version (the AI call failed)"
 
     if text is None:
         text = template_summary(facts)
@@ -135,7 +135,7 @@ def main():
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.write_text(
         "# Traveller bike tips (AI layer output)\n\n"
-        f"*Written by: {written_by}. Every number comes from the gold tables.*\n\n"
+        f"*{written_by}. All numbers come from the gold tables.*\n\n"
         f"{text}\n"
     )
     print(OUTPUT_PATH.read_text())
