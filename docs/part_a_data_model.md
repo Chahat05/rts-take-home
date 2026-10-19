@@ -62,7 +62,7 @@ erDiagram
     }
 ```
 
-*(Detail tables: `search_flight_detail` has origin/destination airport, departure date and time window, passengers. `search_hotel_detail` has location, check-in/out and rooms. `search_car_detail` has pickup location and dates, car model and passengers. The `booking_*_detail` tables have the same idea for what was actually booked, like airline, hotel, exact times and nights. All columns are in `01_schema.sql`.)*
+*(Detail tables: `search_flight_detail` has departure and arrival airport, departure and arrival time, and number of passengers. `search_hotel_detail` has location and number of rooms (plus check-in/out dates). `search_car_detail` has car model and number of passengers (plus pickup location and dates). The `booking_*_detail` tables have the same idea for what was actually booked, like airline, hotel, exact times and nights. All columns are in `01_schema.sql`.)*
 
 | Table | Grain (one row = …) |
 |---|---|
@@ -74,6 +74,10 @@ erDiagram
 
 ### Design decisions
 
+**In a few sentences:** I kept searches and bookings as two separate fact tables, because the gap between what people search for and what they book is where most of the "customer intelligence" is. One row in the booking table is one booked item, so all three business lines fit the same table and Q3 is a simple `GROUP BY`. Things that are different per line (airports, rooms, car model) go in small detail tables. And guests are treated as real customers, matched by a hashed email, since they don't need to register to book.
+
+More detail on each decision:
+
 1. **Searches have their own fact table.** Not every search ends in a booking, and that's exactly the interesting part. Bookings tell us what people bought, searches tell us what they wanted. With both, XYZ can see its conversion rate and the demand it's missing.
 2. **One row in `fact_booking` is one booked item** (a flight, a hotel stay or a car rental). I picked this grain because it works for all three lines, since hotels and cars don't have passengers, and the price is stored only once, so nothing gets double counted. If someone books a flight and a hotel together, that's two rows with the same `order_id`. Passengers and rooms are just columns.
 3. **Header + detail tables.** The common fields (who, when, how much, which line) sit in the header, so a question across all lines like Q3 is just a `GROUP BY business_line`. Fields that only one line has go in that line's detail table. That way there's no huge table with mostly empty columns, and a line can add new fields without touching the others. I also thought about one wide table for everything. It would work, but most columns would be empty for most rows, and it gets messy as the lines grow.
@@ -81,6 +85,18 @@ erDiagram
 5. **Each booking points to the search that led to it** (`fact_booking.search_key`). During the load, a booking is linked to the latest matching search in the same session. This link is what makes the conversion query possible.
 6. **One date table, used for every date.** The same `dim_date` covers booking, search, departure, check-in/out and pickup/drop-off dates (a role-playing dimension). In the same way, `dim_hotel` points to `dim_location` for its city, so city details are stored in one place.
 7. **Cancellations are a status, not a delete.** `booking_status` keeps the history, and each query decides whether to count cancelled bookings.
+8. **Past reservations and the last five searches.** On the website, registered users can see their past reservations and their previous five searches. The warehouse keeps *every* search and booking (not just five), linked by `customer_key`, so full history is there for analysis. The "last five searches" view is then just a query:
+
+```sql
+SELECT *
+FROM (
+    SELECT s.*,
+           ROW_NUMBER() OVER (PARTITION BY s.customer_key ORDER BY s.searched_at DESC) AS rn
+    FROM fact_search s
+    WHERE s.customer_key = 42          -- the logged-in user
+) recent
+WHERE rn <= 5;
+```
 
 **Assumptions:** I used the fields in the brief, plus airline, amount and booking status, since any real booking has those. If a customer's details change (say, a new phone number), I just overwrite the old value, because nothing in the brief needs history (SCD Type 1). If XYZ needed to keep old values, I'd add a new row per change with start and end dates instead (SCD Type 2).
 

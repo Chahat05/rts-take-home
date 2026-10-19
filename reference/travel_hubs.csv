@@ -1,0 +1,11 @@
+hub_id,hub_name,hub_type,lat,lon,anchor_station
+1,Union Station,Rail & bus terminal,38.89696,-77.00493,Columbus Circle / Union Station
+2,Reagan National Airport,Airport,38.852903,-77.045916,National Airport
+3,Metro Center,Metro transfer hub,38.898326,-77.027959,Metro Center / 12th & G St NW
+4,Convention Center,Convention center,38.905737,-77.02227,Convention Center / 7th & M St NW
+5,L'Enfant Plaza,Metro transfer hub,38.886266,-77.022241,L'Enfant Plaza / 7th & C St SW
+6,Smithsonian / National Mall,Tourism,38.888774,-77.028694,Smithsonian-National Mall / Jefferson Dr & 12th St SW
+7,Foggy Bottom,Metro / university / hotels,38.90088,-77.048911,22nd & I St NW / Foggy Bottom
+8,Farragut Square,Business district / hotels,38.902061,-77.038322,17th & K St NW / Farragut Square
+9,Crystal City,Metro / airport hotels,38.857785,-77.051698,Crystal City Metro / 18th St & S Bell St
+10,Rosslyn,Metro / business district,38.896087,-77.071452,Rosslyn Metro / Wilson Blvd & N Moore St
